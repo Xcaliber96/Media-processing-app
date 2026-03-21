@@ -19,7 +19,7 @@ export default function App() {
     setResult(null);
 
     try {
-      const res = await axios.post("http://127.0.0.1:8000/process", {
+      const res = await axios.post("http://backend:8000/process", {
         url,
         operation,
       });
