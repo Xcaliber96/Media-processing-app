@@ -2,6 +2,7 @@ import { useState } from "react";
 import axios from "axios";
 
 export default function App() {
+  console.log("API URL:", import.meta.env.VITE_API_URL);
   const [url, setUrl] = useState("");
   const [operation, setOperation] = useState("thumbnail");
   const [result, setResult] = useState(null);
@@ -19,7 +20,7 @@ export default function App() {
     setResult(null);
 
     try {
-      const res = await axios.post("http://backend:8000/process", {
+      const res = await axios.post("http://localhost:8000/process", {
         url,
         operation,
       });

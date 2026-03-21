@@ -8,10 +8,16 @@ import requests
 import subprocess
 import uuid 
 import os
+import uvicorn 
 
+
+Media_dir = "media"
+Temp_dir = "temp"
+os.makedirs(Media_dir, exist_ok=True)
+os.makedirs(Temp_dir, exist_ok=True)
 
 app = FastAPI()
-app.mount("/media", StaticFiles(directory="media"), name="media")
+app.mount("/media", StaticFiles(directory=Media_dir), name="media")
 
 app.add_middleware(
     CORSMiddleware,
@@ -20,22 +26,19 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
 class processRequest(BaseModel):
     url: str
     operation: str  
 
-Media_dir = "media"
-Temp_dir = "temp"
-
 def run_ffmpeg(input_path: str, operation: str) -> str:
-    os.makedirs(Media_dir, exist_ok=True)
-
     output_filename = str(uuid.uuid4())
 
     if operation == "thumbnail":
         output_path = os.path.join(Media_dir, f"{output_filename}.jpg")
         command = [
-            "ffmpeg",
+            "ffmpeg", 
+            "-y",  
             "-i", input_path,
             "-ss", "00:00:02",
             "-vframes", "1",
@@ -45,7 +48,9 @@ def run_ffmpeg(input_path: str, operation: str) -> str:
     elif operation == "compress":
         output_path = os.path.join(Media_dir, f"{output_filename}.mp4")
         command = [
-            "ffmpeg", "-i", input_path,
+            "ffmpeg", 
+            "-y",
+            "-i", input_path,
             "-vcodec", "libx264",
             "-crf", "28",
             output_path
@@ -54,9 +59,10 @@ def run_ffmpeg(input_path: str, operation: str) -> str:
     elif operation == "extract_audio":
         output_path = os.path.join(Media_dir, f"{output_filename}.mp3")
         command = [
-            "ffmpeg",
+            "ffmpeg", 
+            "-y",
             "-i", input_path,
-            "-map", "0:a:0",
+            "-map", "0:a?", 
             "-codec:a", "libmp3lame",
             output_path
         ]
@@ -67,7 +73,7 @@ def run_ffmpeg(input_path: str, operation: str) -> str:
         command,
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
-        timeout=60
+        timeout=180 
     )
 
     if result.returncode != 0:
@@ -75,9 +81,7 @@ def run_ffmpeg(input_path: str, operation: str) -> str:
 
     return output_path
 
-
 def download_file(url: str) -> str:
-    os.makedirs(Temp_dir, exist_ok=True)
     try:
         filename = f"{uuid.uuid4()}.mp4"
         file_path = os.path.join(Temp_dir, filename)
@@ -94,30 +98,41 @@ def download_file(url: str) -> str:
     except Exception as e:
         raise Exception(f"Failed to download file: {e}")
     
-
-
-    
 @app.get("/")
 def read_root():
-    return {"Hello": "World"}
+    return {"status": "API is live and ready"}
 
 @app.post("/process")
 def process_media(request: processRequest): 
     
     allowed_operations = ["thumbnail", "compress", "extract_audio"]
     if request.operation not in allowed_operations:
-        raise HTTPException(status_code=400, detail=f"Invalid operation. Allowed operations: {', '.join(allowerd_operations)}")
+        raise HTTPException(status_code=400, detail=f"Invalid operation. Allowed operations: {', '.join(allowed_operations)}")
+    
+    
+    print(f"Processing: {request.operation} for URL: {request.url}")
+
     try:
         input_file = download_file(request.url)
-
         output_file = run_ffmpeg(input_file, request.operation)
 
+        if os.path.exists(input_file):
+            os.remove(input_file)
+
         output_file = output_file.replace("\\", "/")
-        file_url = f"http://127.0.0.1:8000/{output_file}"
+        BASE_URL = os.getenv("BASE_URL", "http://localhost:8000")
+        
+        file_url = f"{BASE_URL}/media/{os.path.basename(output_file)}"
+        print(f"Success! File available at: {file_url}")
 
         return {
             "status": "success",
             "output_url": file_url
         }
     except Exception as e:
+        print(f"Error during processing: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
+
+if __name__ == "__main__":
+    port = int(os.environ.get("PORT", 8000))
+    uvicorn.run(app, host="0.0.0.0", port=port)
