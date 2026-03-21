@@ -1,0 +1,43 @@
+# Virtual Environment
+venv/
+.env
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Logs
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE files
+.vscode/
+.idea/
+
+# FastAPI / app temp files
+*.db
+*.sqlite3
+
+# Media / uploads (important for your project)
+media/
+uploads/
+temp/
+*.mp4
+*.mp3
+*.wav
+
+# Environment variables
+.env
+
+# Testing / coverage
+.coverage
+htmlcov/
+
+# Build files
+dist/
+build/
