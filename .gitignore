@@ -15,6 +15,10 @@ __pycache__/
 .DS_Store
 Thumbs.db
 
+# Node
+node_modules/
+dist/
+
 # IDE files
 .vscode/
 .idea/
@@ -30,6 +34,10 @@ temp/
 *.mp4
 *.mp3
 *.wav
+
+# Media files
+media/
+temp/
 
 # Environment variables
 .env
