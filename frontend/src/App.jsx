@@ -1,8 +1,12 @@
 import { useState } from "react";
 import axios from "axios";
 
+const API_BASE_URL =
+  import.meta.env.VITE_API_URL || "https://media-processing-backend.onrender.com";
+
 export default function App() {
-  console.log("API URL:", import.meta.env.VITE_API_URL);
+  console.log("API URL:", API_BASE_URL);
+
   const [url, setUrl] = useState("");
   const [operation, setOperation] = useState("thumbnail");
   const [result, setResult] = useState(null);
@@ -20,14 +24,24 @@ export default function App() {
     setResult(null);
 
     try {
-      const res = await axios.post("http://localhost:8000/process", {
-        url,
-        operation,
-      });
+      const res = await axios.post(
+        `${API_BASE_URL}/process`,
+        {
+          url,
+          operation,
+        },
+        {
+          timeout: 60000, // ✅ prevents timeout issues
+        }
+      );
 
       setResult(res.data.output_url);
     } catch (err) {
-      setError(err.response?.data?.detail || "System error: Processing failed.");
+      console.error(err);
+      setError(
+        err.response?.data?.detail ||
+          "System error: Processing failed."
+      );
     }
 
     setLoading(false);
@@ -41,7 +55,6 @@ export default function App() {
           Media Processor
         </h1>
 
-        
         <input
           type="text"
           placeholder="Enter media URL..."
@@ -50,7 +63,6 @@ export default function App() {
           className="w-full p-3 bg-[#111] border border-zinc-800 text-emerald-400 placeholder-zinc-600 focus:outline-none focus:border-emerald-500/40 focus:bg-[#151515] transition-colors mb-4 rounded-none"
         />
 
-        
         <select
           value={operation}
           onChange={(e) => setOperation(e.target.value)}
@@ -61,7 +73,6 @@ export default function App() {
           <option value="extract_audio">Extract Audio</option>
         </select>
 
-       
         <button
           onClick={handleSubmit}
           disabled={loading}
@@ -70,21 +81,18 @@ export default function App() {
           {loading ? "Processing..." : "Initialize"}
         </button>
 
-    
         {loading && (
           <p className="text-center mt-6 text-emerald-500/50 text-sm animate-pulse tracking-widest uppercase">
             Awaiting response...
           </p>
         )}
 
-        
         {error && (
           <p className="text-red-500/80 text-center mt-6 text-sm tracking-wide">
             {error}
           </p>
         )}
 
-       
         {result && (
           <div className="mt-8 pt-6 border-t border-zinc-800 text-center">
             <p className="mb-4 text-emerald-500/60 text-xs tracking-widest uppercase">
@@ -108,11 +116,7 @@ export default function App() {
             )}
 
             {operation === "extract_audio" && (
-              <audio 
-                src={result} 
-                controls 
-                className="w-full opacity-80" 
-              />
+              <audio src={result} controls className="w-full opacity-80" />
             )}
 
             <a
