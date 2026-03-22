@@ -60,8 +60,9 @@ def run_ffmpeg(input_path: str, operation: str) -> str:
             "ffmpeg", 
             "-y",
             "-i", input_path,
-            "-map", "0:a?", 
-            "-codec:a", "libmp3lame",
+            "-map", "0:a:0",
+            "-vn", 
+            "-acodec", "libmp3lame",
             output_path
         ]
     else:
@@ -122,7 +123,7 @@ def process_media(request: processRequest):
         if os.path.exists(input_file):
             os.remove(input_file)
 
-        # Ensure correct URL formatting
+       
         BASE_URL = os.getenv("BASE_URL", "http://localhost:8000").rstrip('/')
         file_url = f"{BASE_URL}/media/{os.path.basename(output_file)}"
         
