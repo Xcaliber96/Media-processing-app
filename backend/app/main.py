@@ -85,7 +85,11 @@ def download_file(url: str) -> str:
     try:
         filename = f"{uuid.uuid4()}.mp4"
         file_path = os.path.join(Temp_dir, filename)
-        response = requests.get(url, stream=True, timeout=10)
+        headers = {
+            "User-Agent": "Mozilla/5.0",
+            "Accept": "*/*",
+        }
+        response = requests.get(url, stream=True, timeout=10, headers=headers)
 
         if response.status_code != 200:
             raise Exception(f"Failed to download file: {response.status_code}")
