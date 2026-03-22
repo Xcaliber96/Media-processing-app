@@ -24,24 +24,18 @@ export default function App() {
     setResult(null);
 
     try {
-      const res = await axios.post(
-        `${API_BASE_URL}/process`,
-        {
-          url,
-          operation,
-        },
-        {
-          timeout: 60000, // ✅ prevents timeout issues
-        }
-      );
-
+      const res = await axios.post(`${API_BASE_URL}/process`, {
+        url,
+        operation,
+      }, {
+        timeout: 90000, 
+      });
       setResult(res.data.output_url);
     } catch (err) {
-      console.error(err);
-      setError(
-        err.response?.data?.detail ||
-          "System error: Processing failed."
-      );
+      console.error("Full Error Object:", err);
+   
+      const errorMessage = err.response?.data?.detail || err.message || "Unknown processing error.";
+      setError(`System Error: ${errorMessage}`);
     }
 
     setLoading(false);
